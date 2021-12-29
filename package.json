@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "private": "true",
+  "homepage": "https://mitchellkim94.github.io/WebTetris/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack-dev-server --mode development"
