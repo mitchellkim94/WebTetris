@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .controls {
+            position: fixed;
+            bottom: 24px;
+            width: 100%;
+        }
+        .sec-btns {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sec-btns button {
+            padding: 0;
+            font-size: 20px;
+            margin: 0;
+            border: 0;
+            background: none;
+        }
+
+        .btns {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h3 style="display: flex; justify-content: center;">WEB TESTRIS</h3>
+    <section style="display: flex; justify-content: center;">
+        <div style="border: 1px solid black; height: 600px;">
+            <canvas id="game_canvas"></canvas>
+        </div>
+    </section>
+    <div class="controls">
+        <section class="sec-btns">
+            <button>🔼</button>
+            <div class="btns">
+                <button>◀️</button>
+                <button>✅</button>
+                <button>▶️</button>
+            </div>
+            <button>🔽</button>
+        </section>
+    </div>
+    <script src="./bundle.js"></script>
+</body>
+</html>
