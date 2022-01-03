@@ -39,13 +39,9 @@ export default abstract class TetrisBlock {
      * Setters
      */
     set x(x) {
-        if (x < 0) throw new Error("coords X is too small");
-        
         this._x = x;
     }
     set y(y) {
-        if (y < 0) throw new Error("coords Y is too small");
-        
         this._y = y;
     }
     set shape(state) {
@@ -66,8 +62,7 @@ export default abstract class TetrisBlock {
     }
     
     moveX(x: number) {
-        const coordX = this.x + x;
-        this.x = coordX > 0 ? coordX : 0;
+        this.x += x;
     }
     moveY(y: number) {
         this.y += y;

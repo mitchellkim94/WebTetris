@@ -1,14 +1,28 @@
-import TetrisBlock, { BlockCoords } from "./class/BasicBlock";
+import TetrisBlock from "./class/BasicBlock";
 import HatBlock from "./class/HatBlock";
 import Playground from "./class/Playground";
-import { hardDrop, isValidMoveY, moveDown, moveLeft, moveRight, rotateBlock } from "./controls";
+import { stack, hardDrop, isValidMove, moveDown, moveLeft, moveRight, rotateBlock } from "./controls";
 import { COLORS, GROUND_X, GROUND_Y, BLOCK_WIDTH, BLOCK_HEIGHT, SIZE_COLS, SIZE_ROWS } from "./constants";
+import { clickTrigger, downButton, dropButton, leftButton, rightButton, startButton, upButton } from "./dom";
+import BarBlock from "./class/BarBlock";
+import SquareBlock from "./class/SquareBlock";
+import SBlock from "./class/SBlock";
+import ReverseSBlock from "./class/ReverseSBlock";
+import LBlock from "./class/LBlock";
+import ReverseLBlock from "./class/ReverseLBlock";
+
+/**
+ * Game
+ */
 
 const gameCanvas = document.querySelector("#game_canvas") as HTMLCanvasElement;
 const gameCtx = gameCanvas.getContext("2d") as CanvasRenderingContext2D;
 
 const playground = new Playground(BLOCK_WIDTH, BLOCK_HEIGHT, SIZE_COLS, SIZE_ROWS);
 playground.makeGround();
+
+let ongoing: boolean = false;
+let animID: number = 0;
 
 let falling: TetrisBlock;
 let colorIdx = 0;
@@ -18,17 +32,42 @@ gameCanvas.height = playground.GROUND_HEIGHT;
 gameCtx.scale(BLOCK_WIDTH, BLOCK_HEIGHT);
 
 function initializeFalling() {
-    colorIdx = colorIdx < COLORS.length ? colorIdx + 1 : 0;
-    const random = Math.floor(Math.random() * 3);
+    colorIdx = colorIdx < COLORS.length - 1 ? colorIdx + 1 : 0;
+
+    const random = Math.floor(Math.random() * 7);
     const startPoint = Math.floor(SIZE_COLS / 2);
-    
-    falling  = new HatBlock(startPoint, 0);
+
+    switch (random) {
+        case 0:
+            falling  = new HatBlock(startPoint, 0);
+            break;
+        case 1:
+            falling  = new BarBlock(startPoint, 0);
+            break;
+        case 2:
+            falling  = new SquareBlock(startPoint, 0);
+            break;
+        case 3: 
+            falling  = new SBlock(startPoint, 0);
+            break;
+        case 4: 
+            falling  = new ReverseSBlock(startPoint, 0);
+            break;
+        case 5: 
+            falling  = new LBlock(startPoint, 0);
+            break;
+        case 6: 
+            falling  = new ReverseLBlock(startPoint, 0);
+            break;
+        default:
+            break;
+    }
 
     falling.coordinateShape();
 }
 
-function moveBlock(e: KeyboardEvent) {
-    switch (e.key) {
+function moveBlock(key: string) {
+    switch (key) {
         case ' ': return hardDrop(falling, playground);
         case 'ArrowUp': return rotateBlock(falling, playground);
         case 'ArrowDown': return moveDown(falling);
@@ -38,57 +77,57 @@ function moveBlock(e: KeyboardEvent) {
     }
 }
 
-function clearLine(stacktedY: Set<number>, playground: Playground) {
-    for (const y of stacktedY) {
-        if (playground.stackCount[y] > playground.MAX_X_INDEX) {
-            for (let x=0; x<= playground.MAX_X_INDEX; x++) {
-                playground.coords[x].splice(y, 1);
-                playground.coords[x].unshift(0);
-            }
-            playground.stackCount.splice(y, 1);
-            playground.stackCount.unshift(0);
-        }
-    }
-}
-
-function stack(stackCoords: TetrisBlock, playground: Playground, style: number) {
-    const stackedY: Set<number> = new Set();
-
-    stackCoords.shapeCoords.forEach((rows, y) => {
-        rows.forEach((value, x) => {
-            if (value > 0) {
-                const gX = stackCoords.x + x;
-                const gY = Math.floor(stackCoords.y + y);
-                playground.recordBlockOnGround(gX, gY, style);
-                
-                stackedY.add(gY);
-            }
-        });
-    });
-
-    clearLine(stackedY, playground);
-}
-
 function draw() {
     gameCtx.clearRect(GROUND_X, GROUND_Y, SIZE_COLS, SIZE_ROWS);
+    gameCtx.fillStyle = "black";
+    gameCtx.fillRect(0, 0, playground.GROUND_WIDTH, playground.GROUND_HEIGHT);
     playground.drawBlocksOnGround(gameCtx, COLORS);
 
     falling.draw(gameCtx, COLORS[colorIdx]);
 
     falling.moveY(1 / playground.B_HEIGHT);
     
-    if (!isValidMoveY(falling, playground)) {        
+    if (!isValidMove(falling, playground)) {        
         stack(falling, playground, colorIdx);
         initializeFalling();
     }
 
-    requestAnimationFrame(draw);
+    animID = requestAnimationFrame(draw);
+}
+
+function touchPad() {
+    clickTrigger(leftButton, moveBlock, 'ArrowLeft');
+    clickTrigger(upButton, moveBlock, 'ArrowUp');
+    clickTrigger(dropButton, moveBlock, ' ');
+    clickTrigger(downButton, moveBlock, 'ArrowDown');
+    clickTrigger(rightButton, moveBlock, 'ArrowRight');
 }
 
 function init() {
-    addEventListener("keydown", moveBlock);
+    gameCtx.fillStyle = "black";
+    gameCtx.fillRect(0, 0, playground.GROUND_WIDTH, playground.GROUND_HEIGHT);
+    addEventListener("keydown", e => {
+        moveBlock(e.key);
+    });
     initializeFalling();
-    requestAnimationFrame(draw);
+
+    startButton.addEventListener("click", () => {
+        ongoing = !ongoing;
+
+        if (ongoing) {
+            animID = requestAnimationFrame(draw);
+            startButton.innerHTML = 'PAUSE';
+            startButton.classList.add('pause');
+        } else {
+            cancelAnimationFrame(animID);
+            startButton.innerHTML = 'GAME START';
+            startButton.classList.remove('pause');
+        }
+
+        startButton.blur();
+    });
+
+    touchPad();
 }
 
 init();

@@ -80,13 +80,13 @@ export default class Playground {
     }
 
     drawBlocksOnGround(ctx: CanvasRenderingContext2D, style: string[]) {
-        for (let x = 0; x <= this.MAX_X_INDEX; x++) {
-            for (let y = 0; y <= this.MAX_Y_INDEX; y++) {
-                if (this.coords[x][y] > 0) {
-                    ctx.fillStyle = style[this.coords[x][y] - 1];
+        this.ground.forEach((rows, x) => {
+            rows.forEach((value, y) => {
+                if (value > 0) {
+                    ctx.fillStyle = style[value - 1];
                     ctx.fillRect(x, y, 1, 1);
                 }
-            }
-        }
+            });
+        });
     }
 }
