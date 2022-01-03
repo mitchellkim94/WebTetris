@@ -1,28 +1,27 @@
 export default class Playground {
-    private _groundWidth: number;
-    private _groundHeight: number;
     private _blockWidth: number;
     private _blockHeight: number;
+    private _cols: number;
+    private _rows: number;
     
     public coords: number[][] = [];
     public stackCount: number[] = [];
 
-    constructor(g_width: number, g_height: number, b_width: number, b_height: number) {
-        this._groundWidth = g_width;
-        this._groundHeight = g_height;
-        this._blockWidth = b_width;
-        this._blockHeight = b_height;
+    constructor(bWidth: number, bHeight: number, cols: number, rows: number) {
+        this._blockWidth = bWidth;
+        this._blockHeight = bHeight;
+        this._cols = cols;
+        this._rows = rows;
     }
 
     /**
      * Getters
      */
-
-    get G_WIDTH(): number {
-        return this._groundWidth;
+    get cols(): number {
+        return this._cols;
     }
-    get G_HEIGHT(): number {
-        return this._groundHeight;
+    get rows(): number {
+        return this._rows;
     }
     get B_WIDTH(): number {
         return this._blockWidth;
@@ -30,11 +29,17 @@ export default class Playground {
     get B_HEIGHT(): number {
         return this._blockHeight;
     }
+    get GROUND_WIDTH(): number {
+        return this.cols * this.B_WIDTH;
+    }
+    get GROUND_HEIGHT(): number {
+        return this.rows * this.B_HEIGHT;
+    }
     get MAX_X_INDEX(): number {
-        return (this.G_WIDTH / this.B_WIDTH) - 1;
+        return this._cols - 1;
     }
     get MAX_Y_INDEX(): number {
-        return (this.G_HEIGHT / this.B_HEIGHT) - 1;
+        return this._rows - 1;
     }
     get ground(): number[][] {
         return this.coords;
@@ -69,23 +74,17 @@ export default class Playground {
         }
     }
 
-    recordBlockOnGround(x: number, y: number) {
-        this.coords[x][y] = 1;
+    recordBlockOnGround(x: number, y: number, colorIndex: number) {
+        this.coords[x][y] = 1 + colorIndex;
         this.stackCount[y] += 1;
     }
 
-    drawBlocksOnGround(ctx: CanvasRenderingContext2D, style: CanvasFillStrokeStyles['fillStyle']) {
-        ctx.fillStyle = style;
-
-        for (let i = 0; i < this.G_WIDTH / this.B_WIDTH; i++) {
-            for (let j = 0; j < this.G_HEIGHT / this.B_HEIGHT; j++) {
-                if (this.coords[i][j] === 1) {
-                    ctx.fillRect(
-                        i * this.B_WIDTH,
-                        j * this.B_HEIGHT,
-                        this.B_WIDTH,
-                        this.B_HEIGHT
-                    );
+    drawBlocksOnGround(ctx: CanvasRenderingContext2D, style: string[]) {
+        for (let x = 0; x <= this.MAX_X_INDEX; x++) {
+            for (let y = 0; y <= this.MAX_Y_INDEX; y++) {
+                if (this.coords[x][y] > 0) {
+                    ctx.fillStyle = style[this.coords[x][y] - 1];
+                    ctx.fillRect(x, y, 1, 1);
                 }
             }
         }

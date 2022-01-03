@@ -1,12 +1,7 @@
 /**
  * Types
  */
-export interface BasicCoords {
-    x: number;
-    y: number;
-};
-
-export type BlockCoords = BasicCoords[];
+export type BlockCoords = number[][];
 
 /**
  * Class
@@ -14,17 +9,13 @@ export type BlockCoords = BasicCoords[];
 export default abstract class TetrisBlock {
     private _x: number;
     private _y: number;
-    private _w: number;
-    private _h: number;
 
     private _shape: number = 1;
-    private _pixelTo: number = 0;
+    private _shapeCoords: BlockCoords = [];
 
-    constructor(x: number, y: number, w: number, h: number) {
+    constructor(x: number, y: number) {
         this._x = x;
         this._y = y;
-        this._w = w;
-        this._h = h;
     };
 
     /**
@@ -36,18 +27,12 @@ export default abstract class TetrisBlock {
     get y() {
         return this._y;
     }
-    get w() {
-        return this._w;
-    }
-    get h() {
-        return this._h;
-    }
 
     get shape() {
         return this._shape;
     }
-    get pixelTo() {
-        return this._pixelTo;
+    get shapeCoords() {
+        return this._shapeCoords;
     }
 
     /**
@@ -63,48 +48,40 @@ export default abstract class TetrisBlock {
         
         this._y = y;
     }
-    set w(w) {
-        if (w < 0) throw new Error("Width is too small");
-        
-        this._w = w;
-    }
-    set h(h) {
-        if (h < 0) throw new Error("Height is too small");
-        
-        this._h = h;
-    }
     set shape(state) {
         this._shape = state;
     }
-    set pixelTo(pixel) {
-        this._pixelTo = pixel;
+    set shapeCoords(coords: BlockCoords) {
+        this._shapeCoords = coords;
     }
 
     /**
      * Methods
      */
     abstract changeShape(): void;
-    abstract coordinateShape(): BlockCoords;
+    abstract coordinateShape(): void;
 
     changeBack(): void {
         this.shape--;
     }
     
-    moveX(pixel: number) {
-        const xPixel = this.x + pixel;
-        this.x = xPixel > 0 ? xPixel : 0;
+    moveX(x: number) {
+        const coordX = this.x + x;
+        this.x = coordX > 0 ? coordX : 0;
     }
-    moveY() {
-        this.y = this.pixelTo > this.h 
-            ? this.y + this.h 
-            : this.y + this.pixelTo;
-        this.pixelTo = 0;
+    moveY(y: number) {
+        this.y += y;
     }
 
     draw(ctx: CanvasRenderingContext2D, style: CanvasFillStrokeStyles['fillStyle']): void {
-        for (const coord of this.coordinateShape()) {
-            ctx.fillStyle = style + '80';
-            ctx.fillRect(coord.x, coord.y, this.w, this.h);
-        }
+        ctx.fillStyle = style;
+
+        this.shapeCoords.forEach((rows, y) => {
+            rows.forEach((value, x) => {
+                if (value > 0) {
+                    ctx.fillRect(this.x + x, this.y + y, 1, 1);
+                }
+            });
+        });
     }
 }

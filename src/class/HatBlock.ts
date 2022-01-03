@@ -1,8 +1,8 @@
 import TetrisBlock, { BlockCoords } from "./BasicBlock";
 
 export default class HatBlock extends TetrisBlock {
-    constructor(x: number, y: number, w: number, h: number) {
-        super(x, y, w, h);
+    constructor(x: number, y: number) {
+        super(x, y);
     }
 
     changeShape(): void {
@@ -13,38 +13,42 @@ export default class HatBlock extends TetrisBlock {
         }
     }
 
-    coordinateShape(): BlockCoords {
+    coordinateShape() {
         switch (this.shape) {
-            case 1: return [
-                { x: this.x, y: this.y },
-                { x: this.x - this.w, y: this.y + this.h },
-                { x: this.x, y: this.y + this.h },
-                { x: this.x + this.w, y: this.y + this.h },
-            ];
-            case 2: return [
-                { x: this.x, y: this.y },
-                { x: this.x - this.w, y: this.y - this.h },
-                { x: this.x - this.w, y: this.y },
-                { x: this.x - this.w, y: this.y + this.h },
-            ];
-            case 3: return [
-                { x: this.x, y: this.y },
-                { x: this.x - this.w, y: this.y - this.h },
-                { x: this.x, y: this.y - this.h },
-                { x: this.x + this.w, y: this.y - this.h },
-            ];
-            case 4: return [
-                { x: this.x, y: this.y },
-                { x: this.x + this.w, y: this.y - this.h },
-                { x: this.x + this.w, y: this.y },
-                { x: this.x + this.w, y: this.y + this.h },
-            ];
-            default: return [
-                { x: this.x, y: this.y },
-                { x: this.x + this.w, y: this.y - this.h },
-                { x: this.x + this.w, y: this.y },
-                { x: this.x + this.w, y: this.y - this.h },
-            ]
+            case 1: 
+                this.shapeCoords = [
+                    [0, 1, 0],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ];
+                break;
+            case 2: 
+                this.shapeCoords = [
+                    [1, 0, 0],
+                    [1, 1, 0],
+                    [1, 0, 0]
+                ];
+                break;
+            case 3: 
+                this.shapeCoords = [
+                    [1, 1, 1],
+                    [0, 1, 0],
+                    [0, 0, 0]
+                ];
+                break;
+            case 4: 
+                this.shapeCoords = [
+                    [0, 0, 1],
+                    [0, 1, 1],
+                    [0, 0, 1]
+                ];
+                break;
+            default: 
+                this.shapeCoords = [
+                    [0, 1, 0],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                ]
         }
     }
 }

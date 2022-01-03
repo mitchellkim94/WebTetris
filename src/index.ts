@@ -1,42 +1,35 @@
-import BarBlock from "./class/BarBlock";
-import SquareBlock from "./class/SquareBlock"
 import TetrisBlock, { BlockCoords } from "./class/BasicBlock";
 import HatBlock from "./class/HatBlock";
 import Playground from "./class/Playground";
-import { forceCrashBlock, moveDown, moveLeft, moveRight, rotateBlock, willCollideY } from "./controls";
+import { hardDrop, isValidMoveY, moveDown, moveLeft, moveRight, rotateBlock } from "./controls";
+import { COLORS, GROUND_X, GROUND_Y, BLOCK_WIDTH, BLOCK_HEIGHT, SIZE_COLS, SIZE_ROWS } from "./constants";
 
 const gameCanvas = document.querySelector("#game_canvas") as HTMLCanvasElement;
 const gameCtx = gameCanvas.getContext("2d") as CanvasRenderingContext2D;
 
-const GROUND_X = 0;
-const GROUND_Y = 0;
-const GROUND_WIDTH = 300;
-const GROUND_HEIGHT = 600;
-const BLOCK_WIDTH = 25;
-const BLOCK_HEIGHT = 25;
-
-const playground = new Playground(GROUND_WIDTH, GROUND_HEIGHT, BLOCK_WIDTH, BLOCK_HEIGHT);
+const playground = new Playground(BLOCK_WIDTH, BLOCK_HEIGHT, SIZE_COLS, SIZE_ROWS);
 playground.makeGround();
 
 let falling: TetrisBlock;
+let colorIdx = 0;
 
-gameCanvas.width = GROUND_WIDTH;
-gameCanvas.height = GROUND_HEIGHT;
+gameCanvas.width = playground.GROUND_WIDTH;
+gameCanvas.height = playground.GROUND_HEIGHT;
+gameCtx.scale(BLOCK_WIDTH, BLOCK_HEIGHT);
 
 function initializeFalling() {
+    colorIdx = colorIdx < COLORS.length ? colorIdx + 1 : 0;
     const random = Math.floor(Math.random() * 3);
+    const startPoint = Math.floor(SIZE_COLS / 2);
     
-    switch (random) {
-        case 0: return falling = new BarBlock(GROUND_WIDTH / 2, GROUND_Y, BLOCK_WIDTH, BLOCK_HEIGHT);
-        case 1: return falling  = new HatBlock(GROUND_WIDTH / 2, GROUND_Y, BLOCK_WIDTH, BLOCK_HEIGHT);
-        case 2: return falling  = new SquareBlock(GROUND_WIDTH / 2, GROUND_Y, BLOCK_WIDTH, BLOCK_HEIGHT);
-        default: falling = new BarBlock(GROUND_WIDTH / 2, GROUND_Y, BLOCK_WIDTH, BLOCK_HEIGHT);
-    }    
+    falling  = new HatBlock(startPoint, 0);
+
+    falling.coordinateShape();
 }
 
 function moveBlock(e: KeyboardEvent) {
     switch (e.key) {
-        case ' ': return forceCrashBlock(falling, playground);
+        case ' ': return hardDrop(falling, playground);
         case 'ArrowUp': return rotateBlock(falling, playground);
         case 'ArrowDown': return moveDown(falling);
         case 'ArrowRight': return moveRight(falling, playground);
@@ -45,7 +38,7 @@ function moveBlock(e: KeyboardEvent) {
     }
 }
 
-function lineClear(stacktedY: Set<number>, playground: Playground) {
+function clearLine(stacktedY: Set<number>, playground: Playground) {
     for (const y of stacktedY) {
         if (playground.stackCount[y] > playground.MAX_X_INDEX) {
             for (let x=0; x<= playground.MAX_X_INDEX; x++) {
@@ -58,31 +51,34 @@ function lineClear(stacktedY: Set<number>, playground: Playground) {
     }
 }
 
-function stack(blockCoords: BlockCoords, playground: Playground) {
+function stack(stackCoords: TetrisBlock, playground: Playground, style: number) {
     const stackedY: Set<number> = new Set();
 
-    for (const coords of blockCoords) {
-        const x = playground.getCoordX(coords.x);
-        const y = playground.getCoordY(coords.y);
+    stackCoords.shapeCoords.forEach((rows, y) => {
+        rows.forEach((value, x) => {
+            if (value > 0) {
+                const gX = stackCoords.x + x;
+                const gY = Math.floor(stackCoords.y + y);
+                playground.recordBlockOnGround(gX, gY, style);
+                
+                stackedY.add(gY);
+            }
+        });
+    });
 
-        playground.recordBlockOnGround(x, y);
-
-        stackedY.add(y);
-    }
-
-    lineClear(stackedY, playground);
+    clearLine(stackedY, playground);
 }
 
 function draw() {
-    gameCtx.clearRect(GROUND_X, GROUND_Y, GROUND_WIDTH, GROUND_HEIGHT);
-    playground.drawBlocksOnGround(gameCtx, '#00B0FF');
-    falling.draw(gameCtx, '#F50057');
+    gameCtx.clearRect(GROUND_X, GROUND_Y, SIZE_COLS, SIZE_ROWS);
+    playground.drawBlocksOnGround(gameCtx, COLORS);
 
-    falling.pixelTo += 1;
-    falling.moveY();
+    falling.draw(gameCtx, COLORS[colorIdx]);
+
+    falling.moveY(1 / playground.B_HEIGHT);
     
-    if (willCollideY(falling, playground)) {
-        stack(falling.coordinateShape(), playground);
+    if (!isValidMoveY(falling, playground)) {        
+        stack(falling, playground, colorIdx);
         initializeFalling();
     }
 

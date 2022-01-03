@@ -4,59 +4,53 @@ import Playground from "./class/Playground";
 /**
  * 블룩 충돌 검사
  */
-export function willCollideY(nextBlock: TetrisBlock, playground: Playground): boolean {
-    for (const coords of nextBlock.coordinateShape()) {
-        const gX = playground.getCoordX(coords.x);
-        const gY = playground.getCoordY(coords.y);
-        const gBY = playground.getCoordBottomY(coords.y);
+export function isValidMoveY(nextBlock: TetrisBlock, playground: Playground): boolean {
+    return nextBlock.shapeCoords.every((rows, y) => {
+        return rows.every((value, x) => {
+            if (value > 0) {
+                const gX = nextBlock.x + x;
+                const gBy= Math.ceil(nextBlock.y + y);
 
-        if (
-            gX < 0 ||
-            gX > playground.MAX_X_INDEX ||
-            gBY > playground.MAX_Y_INDEX ||
-            playground.ground[gX][gBY] === 1 ||
-            playground.ground[gX][gY] === 1
-        ) return true;
-    }
-    return false;
+                return (
+                    gBy <= playground.MAX_Y_INDEX &&
+                    playground.ground[gX][gBy] === 0
+                );
+            }
+            return true;
+        });
+    });
 }
-function willCollideX(nextBlock: TetrisBlock, playground: Playground) {
-    for (const coords of nextBlock.coordinateShape()) {
-        const gX = playground.getCoordX(coords.x);
-        const gY = playground.getCoordY(coords.y);
-        const gBY = playground.getCoordBottomY(coords.y)
+function isValidMoveX(nextBlock: TetrisBlock, playground: Playground) {
+    return nextBlock.shapeCoords.every((rows, y) => {
+        return rows.every((value, x) => {
+            if (value > 0) {
+                const gX = nextBlock.x + x;
+                const gY = Math.floor(nextBlock.y + y);
+                const gBy= Math.ceil(nextBlock.y + y);
 
-        if (
-            gX < 0 ||
-            gX > playground.MAX_X_INDEX ||
-            gY > playground.MAX_Y_INDEX ||
-            playground.ground[gX][gY] === 1 ||
-            playground.ground[gX][gBY] === 1
-        ) return true;
-    }
-    return false;
+                return (
+                    gX >= 0 &&
+                    gX <= playground.MAX_X_INDEX &&
+                    playground.ground[gX][gY] === 0 &&
+                    playground.ground[gX][gBy] === 0
+                );
+            }
+            return true;
+        });
+    });
 }
 
 /**
  * @spacebar 블록 강제 충돌
  */
-export function forceCrashBlock(block: TetrisBlock, playground: Playground) {
-    // 현재 x 값들 찾기
-    // 각 x 값의 현재 y와 playground의 y의 좌표차이가 가장 작은 애를 찾기
-    // 가장 작은애 만큼 기준 점의 y를 이동시키기
-    let amountOfMoveY = playground.MAX_Y_INDEX;
+export function hardDrop(block: TetrisBlock, playground: Playground) {
+    moveDown(block);
 
-    for (const coords of block.coordinateShape()) {
-        let gY = playground.coords[playground.getCoordX(coords.x)].findIndex(el => { return el === 1 });
-
-        if (gY < 0) gY = playground.MAX_Y_INDEX + 1;
-
-        const distance = gY - playground.getCoordY(coords.y) - 1;
-
-        if (amountOfMoveY > distance) amountOfMoveY = distance;
+    if (!isValidMoveY(block, playground)) {
+        return block.moveY(-1);
     }
-    
-    block.y += amountOfMoveY * block.h;
+
+    hardDrop(block, playground);
 }
 
 /**
@@ -64,8 +58,11 @@ export function forceCrashBlock(block: TetrisBlock, playground: Playground) {
  */
 export function rotateBlock(block: TetrisBlock, playground: Playground) {
     block.changeShape();
-    if (willCollideY(block, playground)) {
+    block.coordinateShape();
+    
+    if (!isValidMoveY(block, playground)) {
         block.changeBack();
+        block.coordinateShape();
     }
 }
 
@@ -73,19 +70,17 @@ export function rotateBlock(block: TetrisBlock, playground: Playground) {
  * @arrowdown 블록을 아래로 이동
  */
 export function moveDown(block: TetrisBlock) {
-    block.pixelTo = block.h;
+    block.moveY(1);
 }
 
 /**
  * @arrowright 블록을 오른쪽으로 이동
  */
 export function moveRight(block: TetrisBlock, playground: Playground) {
-    block.moveX(block.w);
+    block.moveX(1);
 
-    if (willCollideX(block, playground)) {
-        console.log("충돌");
-        
-        block.moveX(-block.w);
+    if (!isValidMoveX(block, playground)) {
+        block.moveX(-1);
     }
 }
 
@@ -93,11 +88,9 @@ export function moveRight(block: TetrisBlock, playground: Playground) {
  * @arrowleft 블록을 왼쪽으로 이동
  */
 export function moveLeft(block: TetrisBlock, playground: Playground) {
-    block.moveX(-block.w);
+    block.moveX(-1);
 
-    if (willCollideX(block, playground)) {
-        console.log("충돌");
-        
-        block.moveX(block.w);
+    if (!isValidMoveX(block, playground)) {
+        block.moveX(1);
     }
 }
